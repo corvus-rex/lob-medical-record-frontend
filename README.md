@@ -1,1 +1,1 @@
-# avatar-studio
+# Lobotomy Medical Health Record Frontend
