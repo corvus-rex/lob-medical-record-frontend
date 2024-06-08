@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lob_frontend/constants/route_names.dart';
 import 'package:lob_frontend/constants/api_endpoints.dart';
+import 'package:lob_frontend/constants/user_data.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/scheduler.dart';
 
@@ -19,6 +20,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _storage = const FlutterSecureStorage();
+  final bool _devMode = true;
   String? _accessToken; 
   TextEditingController _clientID = TextEditingController();
   TextEditingController _password = TextEditingController();
@@ -42,20 +44,56 @@ class _LoginState extends State<Login> {
     });
   }
 
-  Future<bool> _authenticateToken(String token) async {
-    final response = await http.get(
-      Uri.parse(ApiEndpoints.fetchGenVid),
-      headers: {'X-API-Key': token, 'ngrok-skip-browser-warning': "69420",},
-    );
-    if (response.statusCode == 200) {
-      final data = response.body;
-      print("User authenticated ");
-      print(data);
-      await _storage.write(key: 'user', value: data);
-      return true;
+  Future<Map<String, dynamic>> _authenticateToken(String token) async {
+    if (_devMode) {
+      print("Dev mode is ON. Using dummy data.");
+      late Map<String, dynamic> userData;
+      switch (token) {
+        case 'patient':
+          userData = PatientData.toMap();
+          break;
+        case 'admin':
+          userData = AdminData.toMap();
+          break;
+        case 'doctor':
+          userData = DoctorData.toMap();
+          break;
+        case 'staff':
+          userData = StaffData.toMap();
+          break;
+        default:
+          return {'authenticated': false, 'userType': null};
+      }
+      await _storage.write(key: 'user', value: json.encode(userData));
+      return {'authenticated': true, 'userType': userData['userType']};
     } else {
-      print("Error: ${response.statusCode} - ${response.body}");
-      return false;
+      final response = await http.get(
+        Uri.parse(ApiEndpoints.me),
+        headers: {
+          'X-API-Key': token,
+          'ngrok-skip-browser-warning': "69420",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        try {
+          final data = json.decode(response.body);
+          print("User authenticated ");
+          print(data);
+
+          await _storage.write(key: 'user', value: response.body);
+          
+          final userType = data['userType'];
+
+          return {'authenticated': true, 'userType': userType};
+        } catch (e) {
+          print("Error parsing response: $e");
+          return {'authenticated': false, 'userType': null};
+        }
+      } else {
+        print("Error: ${response.statusCode} - ${response.body}");
+        return {'authenticated': false, 'userType': null};
+      }
     }
   }
 
@@ -68,36 +106,40 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> login(String clientID, String password) async {
-    final res = await http.post(
-        Uri.parse(ApiEndpoints.login),
-        headers:  <String, String>{
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'ngrok-skip-browser-warning': "69420",
-        },
-        body: {'username': clientID, 'password': password}
-    );
-    Map jsonRes = jsonDecode(res.body);
-    print(res);
-    if (res.statusCode == 200) {
-      setState(() {
-        _accessToken = jsonRes["access_token"];
-      });
-      print(jsonRes);
-      await _storage.write(key: 'token', value: jsonRes["access_token"]);
-      print('New token set: ' + jsonRes["access_token"]);
-      _authenticateToken(jsonRes["access_token"]).then((isAuth) {
-        if (isAuth != false) {
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).pushNamed(RoutesName.HOME);
-          });
-        }
-      });
+    if (_devMode) {
+
     } else {
-      _errLogin = true;
-      setState(() {
-        _accessToken = '';
-      });
-      return await Future(() => '');
+      final res = await http.post(
+          Uri.parse(ApiEndpoints.login),
+          headers:  <String, String>{
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'ngrok-skip-browser-warning': "69420",
+          },
+          body: {'username': clientID, 'password': password}
+      );
+      Map jsonRes = jsonDecode(res.body);
+      print(res);
+      if (res.statusCode == 200) {
+        setState(() {
+          _accessToken = jsonRes["access_token"];
+        });
+        print(jsonRes);
+        await _storage.write(key: 'token', value: jsonRes["access_token"]);
+        print('New token set: ' + jsonRes["access_token"]);
+        _authenticateToken(jsonRes["access_token"]).then((isAuth) {
+          if (isAuth != false) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushNamed(RoutesName.HOME);
+            });
+          }
+        });
+      } else {
+        _errLogin = true;
+        setState(() {
+          _accessToken = '';
+        });
+        return await Future(() => '');
+      }
     }
   }
 
