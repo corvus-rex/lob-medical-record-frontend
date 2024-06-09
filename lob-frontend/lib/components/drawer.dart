@@ -126,7 +126,7 @@ class _MyDrawerState extends State<MyDrawer> {
                           )
                         : const ImageIcon(AssetImage('assets/Home.png')),
                     title: Text(
-                      'Daftar Pasien',
+                      'Semua Pasien',
                       style: TextStyle(
                         color: widget.routeName == RoutesName.PATIENT_LIST ||
                                 widget.routeName == '/patient/list'

@@ -72,7 +72,7 @@ class DoctorData {
 
 class AdminData {
   static const username = "adrianovadmin";
-  static const userType = 2;
+  static const userType = 1;
   static const userEmail = "adrianovadmin@gmail.com";
   static const name = "Adrian";
   static final dob = DateTime(1985, 5, 15);
