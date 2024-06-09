@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:lob_frontend/views/home.dart';
 import 'package:lob_frontend/views/login.dart';
+import 'package:lob_frontend/views/blank.dart';
+import 'package:lob_frontend/views/my_data.dart';
+import 'package:lob_frontend/views/patient_list.dart';
+import 'package:lob_frontend/views/patient_reg.dart';
 import 'package:lob_frontend/components/drawer.dart';
 
 class RoutesName {
   static const String LOGIN = '/auth';
-  static const String HOME = '/home';
+  static const String BLANK = '/home';
+  static const String PATIENT_REG = '/patient/register';
+  static const String PATIENT_LIST = '/patient/list';
+  static const String MY_DATA = '/patient/me';
 }
 
 class RouteGenerator {
@@ -14,12 +20,21 @@ class RouteGenerator {
       case RoutesName.LOGIN:
         return _GeneratePageRoute(
             widget: Login(), routeName: settings.name!);
-      case RoutesName.HOME:
+      case RoutesName.PATIENT_LIST:
         return _GeneratePageRoute(
-            widget: HomePage(), routeName: settings.name!);
+            widget: PatientListPage(), routeName: settings.name!);
+      case RoutesName.PATIENT_REG:
+        return _GeneratePageRoute(
+            widget: RegPatientPage(), routeName: settings.name!);
+      case RoutesName.MY_DATA:
+        return _GeneratePageRoute(
+            widget: MyDataPage(), routeName: settings.name!);
+      case RoutesName.BLANK:
+        return _GeneratePageRoute(
+            widget: BlankPage(), routeName: settings.name!);
       default:
         return _GeneratePageRoute(
-            widget: HomePage(), routeName: settings.name!);
+            widget: BlankPage(), routeName: settings.name!);
     }
   }
 }

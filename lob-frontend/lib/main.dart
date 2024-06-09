@@ -24,7 +24,7 @@ class MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       builder: (context, child) => DefaultPage(child: child!),
       onGenerateRoute: RouteGenerator.generateRoute,
-      initialRoute: RoutesName.HOME,
+      initialRoute: RoutesName.BLANK,
     );
   }
 }

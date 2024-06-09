@@ -36,7 +36,7 @@ class _LoginState extends State<Login> {
         _authenticateToken(token).then((isAuth) {
           if (isAuth != false) {
             SchedulerBinding.instance.addPostFrameCallback((_) {
-              Navigator.of(context).pushNamed(RoutesName.HOME);
+              Navigator.of(context).pushNamed(RoutesName.BLANK);
             });
           }
         })
@@ -106,42 +106,117 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> login(String clientID, String password) async {
-    if (_devMode) {
+  if (_devMode) {
+    print("Dev mode is ON. Using dummy data.");
 
+    late Map<String, dynamic> dummyResponse;
+    late String dummyToken;
+    late int userType;
+
+    if (clientID.contains('patient')) {
+      dummyToken = 'patient';
+      dummyResponse = PatientData.toMap();
+      userType = 4;
+    } else if (clientID.contains('doctor')) {
+      dummyToken = 'doctor';
+      dummyResponse = DoctorData.toMap();
+      userType = 2;
+    } else if (clientID.contains('staff')) {
+      dummyToken = 'staff';
+      dummyResponse = StaffData.toMap();
+      userType = 3;
+    } else if (clientID.contains('admin')) {
+      dummyToken = 'admin';
+      dummyResponse = AdminData.toMap();
+      userType = 1;
     } else {
-      final res = await http.post(
-          Uri.parse(ApiEndpoints.login),
-          headers:  <String, String>{
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'ngrok-skip-browser-warning': "69420",
-          },
-          body: {'username': clientID, 'password': password}
-      );
-      Map jsonRes = jsonDecode(res.body);
-      print(res);
-      if (res.statusCode == 200) {
-        setState(() {
-          _accessToken = jsonRes["access_token"];
-        });
-        print(jsonRes);
-        await _storage.write(key: 'token', value: jsonRes["access_token"]);
-        print('New token set: ' + jsonRes["access_token"]);
-        _authenticateToken(jsonRes["access_token"]).then((isAuth) {
-          if (isAuth != false) {
+      _errLogin = true;
+      setState(() {
+        _accessToken = '';
+      });
+      return await Future(() => '');
+    }
+
+    setState(() {
+      _accessToken = dummyToken;
+    });
+    await _storage.write(key: 'token', value: dummyToken);
+    print('New token set: ' + dummyToken);
+
+    await _storage.write(key: 'user', value: json.encode(dummyResponse));
+    print('Dummy user data set: ' + json.encode(dummyResponse));
+
+    if (userType == 1) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamed(RoutesName.PATIENT_REG);
+      });
+    } else if (userType == 2) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamed(RoutesName.PATIENT_LIST);
+      });
+    } else if (userType == 3) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamed(RoutesName.PATIENT_LIST);
+      });
+    } else if (userType == 4) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamed(RoutesName.MY_DATA);
+      });
+    }
+
+  } else {
+    final res = await http.post(
+      Uri.parse(ApiEndpoints.login),
+      headers: <String, String>{
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'ngrok-skip-browser-warning': "69420",
+      },
+      body: {'username': clientID, 'password': password},
+    );
+
+    Map jsonRes = jsonDecode(res.body);
+    print(res);
+    if (res.statusCode == 200) {
+      setState(() {
+        _accessToken = jsonRes["access_token"];
+      });
+      print(jsonRes);
+      await _storage.write(key: 'token', value: jsonRes["access_token"]);
+      print('New token set: ' + jsonRes["access_token"]);
+
+      _authenticateToken(jsonRes["access_token"]).then((res) {
+        if (res['authenticated']) {
+          
+          if (res['userType'] == 1) {
             SchedulerBinding.instance.addPostFrameCallback((_) {
-              Navigator.of(context).pushNamed(RoutesName.HOME);
+              Navigator.of(context).pushNamed(RoutesName.PATIENT_REG);
+            });
+          } else if (res['userType'] == 2) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushNamed(RoutesName.PATIENT_LIST);
+            });
+          } else if (res['userType'] == 3) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushNamed(RoutesName.PATIENT_LIST);
+            });
+          } else if (res['userType'] == 4) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushNamed(RoutesName.MY_DATA);
             });
           }
-        });
-      } else {
-        _errLogin = true;
-        setState(() {
-          _accessToken = '';
-        });
-        return await Future(() => '');
-      }
+        }
+      });
+    } else {
+      _errLogin = true;
+      setState(() {
+        _accessToken = '';
+      });
+      return await Future(() => '');
     }
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
