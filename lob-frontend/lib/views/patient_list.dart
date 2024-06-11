@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:lob_frontend/constants/patient_list_data.dart';
 import 'package:http/http.dart' as http;
 import 'package:lob_frontend/constants/api_endpoints.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'dart:async';
 
@@ -38,7 +39,22 @@ class _PatientListPageState extends State<PatientListPage> {
   TextEditingController _newTemp = TextEditingController();
   TextEditingController _newNote = TextEditingController();
   bool _showNewEntryFields = false;
+  bool _showNewNotesFields = false;
+  TextEditingController _newNoteContent = TextEditingController();
+  TextEditingController _newDiagnosis = TextEditingController();
+  String? _filePath;
 
+  void _openFilePicker() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      setState(() {
+        _filePath = result.files.single.path!;
+      });
+    } else {
+      // User canceled the picker
+    }
+  }
 
   @override
   void initState() {
@@ -334,7 +350,7 @@ class _PatientListPageState extends State<PatientListPage> {
                         ),
                       ),
                       SizedBox(height: 20,),
-                      _showNewEntryFields && (_userType == 1 || _userType == 3 )? 
+                      _showNewEntryFields && (_userType == 2 || _userType == 3 )? 
                       SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,6 +402,159 @@ class _PatientListPageState extends State<PatientListPage> {
                                 // Add new clinical entry
                               },
                               child: Text('Save'),
+                            ),
+                          ],
+                        ),
+                      ): const SizedBox(height: 0,),
+                  
+                      const Divider(
+                        height: 20,
+                        thickness: 2,
+                        indent: 20,
+                        endIndent: 0,
+                        color: AppColors.input,
+                      ),
+                      SizedBox(height: 40,),
+                      const Text(
+                        'Rekam dan Catatan Medis',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+                      Container(
+                        height: 300, // Adjust height as needed
+                        child: DefaultTabController(
+                          length: _selectedPatient['medicalRecord']['medicalNote'].length,
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 20),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        DefaultTabController(
+                                          length: _selectedPatient['medicalRecord']['medicalNote'].length,
+                                          child: Column(
+                                            children: [
+                                              TabBar(
+                                                indicatorColor: AppColors.element,
+                                                labelColor: AppColors.element,
+                                                isScrollable: true,
+                                                tabs: _selectedPatient['medicalRecord']['medicalNote'].map<Tab>((entry) {
+                                                  String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
+                                                      .toLocal()
+                                                      .toString()
+                                                      .substring(0, 10);
+                                                  return Tab(text: date);
+                                                }).toList(),
+                                              ),
+                                              Container(
+                                                height: 300, // Adjust height as needed
+                                                child: TabBarView(
+                                                  children: [
+                                                    ..._selectedPatient['medicalRecord']['medicalNote'].map<Widget>((entry) {
+                                                      return SingleChildScrollView(
+                                                        child: GestureDetector(
+                                                          onTap: () {
+                                                            // Open edit form for this clinical entry
+                                                          },
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              const SizedBox(height: 20),
+                                                              Table(
+                                                                children: [
+                                                                  _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
+                                                                  _buildTableRow('Note Content', '${entry['noteContent']}'),
+                                                                  _buildTableRow('Diagnosis', '${entry['diagnosis']}'),
+                                                                  _buildTableRow('Attachment', '${entry['attachment']}'),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  ]
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 40,),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.only(top:20, bottom: 20, left: 0, right: 0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          backgroundColor: AppColors.selected
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showNewNotesFields = !_showNewNotesFields;
+                          });
+                        },
+                        child: const Text(
+                          textAlign: TextAlign.center,
+                          "+",
+                          style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          )
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+                      _showNewNotesFields && (_userType == 1 )? 
+                      SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _newNoteContent, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Catatan Medis',
+                              ),
+                            ),
+                            TextField(
+                              controller: _newDiagnosis, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Diagnosis',
+                              ),
+                            ),
+                            SizedBox(height: 20,),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.only(top:20, bottom: 20, left: 0, right: 0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                                backgroundColor: AppColors.selected
+                              ),
+                              onPressed: _openFilePicker,
+                              child: const Text(
+                                textAlign: TextAlign.center,
+                                "Upload File",
+                                style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                )
+                              ),
                             ),
                           ],
                         ),

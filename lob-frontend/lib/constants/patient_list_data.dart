@@ -40,6 +40,20 @@ Map<String, dynamic> patientListData = {
             "diastolic": 112,
             "note": "tidak waras"
           },
+        ],
+        "medicalNote": [
+          {
+            "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001000.pdf",
+            "diagnosis": "Cancer Stage 4"
+          },
+          {
+            "date": DateTime(2024, 3, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001011.pdf",
+            "diagnosis": "Cancer Stage 4"
+          }
         ]
       }
     },
@@ -70,6 +84,20 @@ Map<String, dynamic> patientListData = {
             "systolic": 120,
             "diastolic": 80,
             "note": "Healthy"
+          }
+        ],
+        "medicalNote": [
+          {
+            "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001000.pdf",
+            "diagnosis": "Cancer Stage 4"
+          },
+          {
+            "date": DateTime(2024, 3, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001011.pdf",
+            "diagnosis": "Cancer Stage 4"
           }
         ]
       }
@@ -102,6 +130,20 @@ Map<String, dynamic> patientListData = {
             "diastolic": 85,
             "note": "Mild hypertension"
           }
+        ],
+        "medicalNote": [
+          {
+            "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001000.pdf",
+            "diagnosis": "Cancer Stage 4"
+          },
+          {
+            "date": DateTime(2024, 3, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001011.pdf",
+            "diagnosis": "Cancer Stage 4"
+          }
         ]
       }
     },
@@ -132,6 +174,20 @@ Map<String, dynamic> patientListData = {
             "systolic": 110,
             "diastolic": 70,
             "note": "Healthy"
+          }
+        ],
+        "medicalNote": [
+          {
+            "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001000.pdf",
+            "diagnosis": "Cancer Stage 4"
+          },
+          {
+            "date": DateTime(2024, 3, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001011.pdf",
+            "diagnosis": "Cancer Stage 4"
           }
         ]
       }
@@ -164,6 +220,20 @@ Map<String, dynamic> patientListData = {
             "diastolic": 82,
             "note": "Good health"
           }
+        ],
+        "medicalNote": [
+          {
+            "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001000.pdf",
+            "diagnosis": "Cancer Stage 4"
+          },
+          {
+            "date": DateTime(2024, 3, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001011.pdf",
+            "diagnosis": "Cancer Stage 4"
+          }
         ]
       }
     },
@@ -195,6 +265,20 @@ Map<String, dynamic> patientListData = {
             "diastolic": 75,
             "note": "No issues"
           }
+        ],
+        "medicalNote": [
+          {
+            "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001000.pdf",
+            "diagnosis": "Cancer Stage 4"
+          },
+          {
+            "date": DateTime(2024, 3, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001011.pdf",
+            "diagnosis": "Cancer Stage 4"
+          }
         ]
       }
     },
@@ -225,6 +309,20 @@ Map<String, dynamic> patientListData = {
             "systolic": 135,
             "diastolic": 88,
             "note": "Mild obesity"
+          }
+        ],
+        "medicalNote": [
+          {
+            "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001000.pdf",
+            "diagnosis": "Cancer Stage 4"
+          },
+          {
+            "date": DateTime(2024, 3, 2).millisecondsSinceEpoch ~/ 1000,
+            "noteContent": "Lorem Ipsum dolor sit Amet",
+            "attachment": "http://localhost:9000/file/id-101001011.pdf",
+            "diagnosis": "Cancer Stage 4"
           }
         ]
       }
