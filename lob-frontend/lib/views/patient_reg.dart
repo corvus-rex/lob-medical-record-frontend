@@ -1,7 +1,6 @@
 import 'package:lob_frontend/constants/app_color.dart';
 import 'package:flutter/material.dart';
 import 'package:lob_frontend/components/header.dart';
-import 'package:lob_frontend/constants/placeholder_data.dart';
 import 'package:lob_frontend/constants/route_names.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lob_frontend/main.dart';
@@ -29,10 +28,12 @@ class _RegPatientPageState extends State<RegPatientPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _relativePhoneController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _pobController = TextEditingController();
+  final TextEditingController _insuranceController = TextEditingController();
   final TextEditingController _nationalIdController = TextEditingController();
-  final TextEditingController _taxNumberController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isMale = true;
@@ -41,8 +42,6 @@ class _RegPatientPageState extends State<RegPatientPage> {
   @override
   void initState() {
     super.initState();
-    DateTime lastEdited;
-    String rawLastEdited;
     _fetchAccessToken().then((token) => {
       if (token == null) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -101,12 +100,26 @@ class _RegPatientPageState extends State<RegPatientPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
+                      _buildDropdownButtonFormField(),
+                      const SizedBox(height: 20),
                       Row(
                         children: [
                           Expanded(
                             child: _buildTextField(
                               controller: _phoneController,
                               labelText: 'No. Handphone',
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _relativePhoneController,
+                              labelText: 'No. Handphone Kerabat',
                             ),
                           ),
                           const SizedBox(width: 20),
@@ -156,9 +169,29 @@ class _RegPatientPageState extends State<RegPatientPage> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20,),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _addressController,
+                              labelText: 'Alamat',
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 20),
-                      _buildDropdownButtonFormField(),
-                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _insuranceController,
+                              labelText: 'Jenis Asuransi',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 50),
                       _buildTextField(
                         controller: _passwordController,
                         labelText: 'Password',
@@ -179,7 +212,7 @@ class _RegPatientPageState extends State<RegPatientPage> {
                                 'name': _nameController.text,
                                 'dob': _dobUnixTimestamp,
                                 'nationalId': _nationalIdController.text,
-                                'taxNumber': _taxNumberController.text,
+                                'address': _addressController.text,
                                 'sex': _isMale ? 1 : 0,
                                 'password': _passwordController.text,
                               };

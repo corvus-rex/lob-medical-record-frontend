@@ -1,7 +1,6 @@
 import 'package:lob_frontend/constants/app_color.dart';
 import 'package:flutter/material.dart';
 import 'package:lob_frontend/components/header.dart';
-import 'package:lob_frontend/constants/placeholder_data.dart';
 import 'package:lob_frontend/constants/route_names.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lob_frontend/main.dart';
