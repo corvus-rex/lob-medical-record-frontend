@@ -16,6 +16,8 @@ class RoutesName {
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
+    final args = settings.arguments;
+
     switch (settings.name) {
       case RoutesName.LOGIN:
         return _GeneratePageRoute(
@@ -28,7 +30,7 @@ class RouteGenerator {
             widget: RegPatientPage(), routeName: settings.name!);
       case RoutesName.MY_DATA:
         return _GeneratePageRoute(
-            widget: MyDataPage(), routeName: settings.name!);
+          widget: MyDataPage(), routeName: settings.name!);
       case RoutesName.BLANK:
         return _GeneratePageRoute(
             widget: BlankPage(), routeName: settings.name!);

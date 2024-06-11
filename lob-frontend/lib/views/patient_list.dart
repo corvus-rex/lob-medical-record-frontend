@@ -27,6 +27,8 @@ class _PatientListPageState extends State<PatientListPage> {
   late Map<String, dynamic> _userData;
   bool _loadFinished = false;
   bool _devMode = true;
+  bool _isSelectedPatient = false;
+  Map<String, dynamic> _selectedPatient = {};
   List<Map<String, dynamic>> _patients = [];
 
   @override
@@ -92,7 +94,7 @@ class _PatientListPageState extends State<PatientListPage> {
               endIndent: 0,
               color: AppColors.input,
             ),
-            Expanded(
+            !_isSelectedPatient ? Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.element),
@@ -104,9 +106,9 @@ class _PatientListPageState extends State<PatientListPage> {
                     width: MediaQuery.of(context).size.width * 0.8,
                     child: DataTable(
                       columns: [
-                        DataColumn(label: Text('Name')),
+                        DataColumn(label: Text('Nama Lengkap')),
                         DataColumn(label: Text('Sex')),
-                        DataColumn(label: Text('DOB')),
+                        DataColumn(label: Text('Tanggal Lahir')),
                         DataColumn(label: Text('Action')), // New column for the buttons
                         if (_userType == 1)
                           DataColumn(label: Text('Edit')),
@@ -128,7 +130,11 @@ class _PatientListPageState extends State<PatientListPage> {
                           DataCell( // Custom cell for the action buttons
                             ElevatedButton(
                               onPressed: () {
-                                // Handle button press, e.g., navigate to detail page
+                                print(patient['patientID']);
+                                setState(() {
+                                  _selectedPatient = patient;
+                                  _isSelectedPatient = true;
+                                });
                               },
                               child: Text('See Detail'),
                             ),
@@ -170,10 +176,149 @@ class _PatientListPageState extends State<PatientListPage> {
                   ),
                 ),
               ),
-            ),
+            ) : Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Data Pasien',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 40,),
+                      Table(
+                        columnWidths: const {
+                          0: IntrinsicColumnWidth(),
+                          1: FlexColumnWidth(),
+                        },
+                        children: [
+                          _buildTableRow('No. Pasien:', _selectedPatient!['patientID']),
+                          _buildTableRow('Nama lengkap:', _selectedPatient!['name']),
+                          _buildTableRow('Tanggal lahir:', DateTime.fromMillisecondsSinceEpoch(_selectedPatient!['dob'] * 1000).toLocal().toString().substring(0, 10)),
+                          _buildTableRow('Nomor Identitas (KTP/SIM):', _selectedPatient!['nationalID']),
+                          _buildTableRow('No. Handphone:', _selectedPatient!['phoneNum']),
+                          _buildTableRow('No. Handphone Kerabat:', _selectedPatient!['relativePhone']),
+                          _buildTableRow('Alamat:', _selectedPatient!['address']),
+                          _buildTableRow('Alias:', _selectedPatient!['alias']),
+                          _buildTableRow('Nama asuransi:', _selectedPatient!['insurance']['insurance_name']),
+                          _buildTableRow('Jenis kelamin:', _selectedPatient!['sex'] ? 'Laki-laki' : 'Perempuan'),
+                        ],
+                      ),
+                      const Divider(
+                        height: 20,
+                        thickness: 2,
+                        indent: 20,
+                        endIndent: 0,
+                        color: AppColors.input,
+                      ),
+                      SizedBox(height: 40,),
+                      const Text(
+                        'Data Klinis',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+                      Container(
+                        height: 300, // Adjust height as needed
+                        child: DefaultTabController(
+                          length: _selectedPatient['medicalRecord']['clinicalEntry'].length,
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 20),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        DefaultTabController(
+                                          length: _selectedPatient['medicalRecord']['clinicalEntry'].length,
+                                          child: Column(
+                                            children: [
+                                              TabBar(
+                                                indicatorColor: AppColors.element,
+                                                labelColor: AppColors.element,
+                                                isScrollable: true,
+                                                tabs: _selectedPatient['medicalRecord']['clinicalEntry'].map<Tab>((entry) {
+                                                  String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
+                                                      .toLocal()
+                                                      .toString()
+                                                      .substring(0, 10);
+                                                  return Tab(text: date);
+                                                }).toList(),
+                                              ),
+                                              Container(
+                                                height: 300, // Adjust height as needed
+                                                child: TabBarView(
+                                                  children: _selectedPatient['medicalRecord']['clinicalEntry'].map<Widget>((entry) {
+                                                    return SingleChildScrollView(
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          const SizedBox(height: 20),
+                                                          Table(
+                                                            children: [
+                                                              _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
+                                                              _buildTableRow('Height', '${entry['height']} cm'),
+                                                              _buildTableRow('Weight', '${entry['weight']} kg'),
+                                                              _buildTableRow('Body Temperature', '${entry['bodyTemp']} °C'),
+                                                              _buildTableRow('Blood Type', '${entry['bloodType']}'),
+                                                              _buildTableRow('Systolic', '${entry['systolic']} mmHg'),
+                                                              _buildTableRow('Diastolic', '${entry['diastolic']} mmHg'),
+                                                              _buildTableRow('Note', '${entry['note']}'),
+                                                            ],
+                                                          ),
+                                                        ]
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ]
+                ),
+              )
+              )
           ],
         ),
       ),
+    );
+  }
+
+  TableRow _buildTableRow(String label, String value) {
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            label,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(value),
+        ),
+      ],
     );
   }
 
