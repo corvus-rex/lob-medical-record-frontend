@@ -30,6 +30,15 @@ class _PatientListPageState extends State<PatientListPage> {
   bool _isSelectedPatient = false;
   Map<String, dynamic> _selectedPatient = {};
   List<Map<String, dynamic>> _patients = [];
+  TextEditingController _newBloodType = TextEditingController();
+  TextEditingController _newDiastolic = TextEditingController();
+  TextEditingController _newSystolic = TextEditingController();
+  TextEditingController _newHeight = TextEditingController();
+  TextEditingController _newWeight = TextEditingController();
+  TextEditingController _newTemp = TextEditingController();
+  TextEditingController _newNote = TextEditingController();
+  bool _showNewEntryFields = false;
+
 
   @override
   void initState() {
@@ -258,28 +267,35 @@ class _PatientListPageState extends State<PatientListPage> {
                                               Container(
                                                 height: 300, // Adjust height as needed
                                                 child: TabBarView(
-                                                  children: _selectedPatient['medicalRecord']['clinicalEntry'].map<Widget>((entry) {
-                                                    return SingleChildScrollView(
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          const SizedBox(height: 20),
-                                                          Table(
+                                                  children: [
+                                                    ..._selectedPatient['medicalRecord']['clinicalEntry'].map<Widget>((entry) {
+                                                      return SingleChildScrollView(
+                                                        child: GestureDetector(
+                                                          onTap: () {
+                                                            // Open edit form for this clinical entry
+                                                          },
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
                                                             children: [
-                                                              _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
-                                                              _buildTableRow('Height', '${entry['height']} cm'),
-                                                              _buildTableRow('Weight', '${entry['weight']} kg'),
-                                                              _buildTableRow('Body Temperature', '${entry['bodyTemp']} °C'),
-                                                              _buildTableRow('Blood Type', '${entry['bloodType']}'),
-                                                              _buildTableRow('Systolic', '${entry['systolic']} mmHg'),
-                                                              _buildTableRow('Diastolic', '${entry['diastolic']} mmHg'),
-                                                              _buildTableRow('Note', '${entry['note']}'),
+                                                              const SizedBox(height: 20),
+                                                              Table(
+                                                                children: [
+                                                                  _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
+                                                                  _buildTableRow('Height', '${entry['height']} cm'),
+                                                                  _buildTableRow('Weight', '${entry['weight']} kg'),
+                                                                  _buildTableRow('Body Temperature', '${entry['bodyTemp']} °C'),
+                                                                  _buildTableRow('Blood Type', '${entry['bloodType']}'),
+                                                                  _buildTableRow('Systolic', '${entry['systolic']} mmHg'),
+                                                                  _buildTableRow('Diastolic', '${entry['diastolic']} mmHg'),
+                                                                  _buildTableRow('Note', '${entry['note']}'),
+                                                                ],
+                                                              ),
                                                             ],
                                                           ),
-                                                        ]
-                                                      ),
-                                                    );
-                                                  }).toList(),
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  ]
                                                 ),
                                               ),
                                             ],
@@ -294,6 +310,86 @@ class _PatientListPageState extends State<PatientListPage> {
                           ),
                         ),
                       ),
+                      SizedBox(height: 40,),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.only(top:20, bottom: 20, left: 0, right: 0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          backgroundColor: AppColors.selected
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showNewEntryFields = !_showNewEntryFields;
+                          });
+                        },
+                        child: const Text(
+                          textAlign: TextAlign.center,
+                          "+",
+                          style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          )
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+                      _showNewEntryFields && (_userType == 1 || _userType == 3 )? 
+                      SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _newHeight, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Height (cm)',
+                              ),
+                            ),
+                            TextField(
+                              controller: _newWeight, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Weight (kg)',
+                              ),
+                            ),
+                            TextField(
+                              controller: _newTemp, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Body Temperature (°C)',
+                              ),
+                            ),
+                            TextField(
+                              controller: _newBloodType, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Blood Type',
+                              ),
+                            ),
+                            TextField(
+                              controller: _newSystolic, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Systolic (mmHg)',
+                              ),
+                            ),
+                            TextField(
+                              controller: _newDiastolic, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Diastolic (mmHg)',
+                              ),
+                            ),
+                            TextField(
+                              controller: _newNote, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Note',
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                // Add new clinical entry
+                              },
+                              child: Text('Save'),
+                            ),
+                          ],
+                        ),
+                      ): const SizedBox(height: 0,),
                   ]
                 ),
               )
