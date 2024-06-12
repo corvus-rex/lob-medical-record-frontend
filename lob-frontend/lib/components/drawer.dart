@@ -53,7 +53,7 @@ class _MyDrawerState extends State<MyDrawer> {
       return null;
     }
     setState(() {
-      _userType = _userData['userType'];
+      _userType = _userData['user_type'];
     });
     return token;
   }

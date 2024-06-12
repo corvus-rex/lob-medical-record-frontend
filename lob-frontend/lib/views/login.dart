@@ -19,7 +19,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _storage = const FlutterSecureStorage();
-  final bool _devMode = true;
+  final bool _devMode = false;
   String? _accessToken; 
   TextEditingController _clientID = TextEditingController();
   TextEditingController _password = TextEditingController();
@@ -69,7 +69,7 @@ class _LoginState extends State<Login> {
       final response = await http.get(
         Uri.parse(ApiEndpoints.me),
         headers: {
-          'X-API-Key': token,
+          'Authorization': 'Bearer $token',
           'ngrok-skip-browser-warning': "69420",
         },
       );
@@ -82,7 +82,7 @@ class _LoginState extends State<Login> {
 
           await _storage.write(key: 'user', value: response.body);
           
-          final userType = data['userType'];
+          final userType = data['user_type'];
 
           return {'authenticated': true, 'userType': userType};
         } catch (e) {
