@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:lob_frontend/components/video_player.dart';
 import 'dart:math';
 import 'package:lob_frontend/constants/api_endpoints.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'dart:async';
 
@@ -33,6 +34,7 @@ class _RegPatientPageState extends State<RegPatientPage> {
   final TextEditingController _pobController = TextEditingController();
   final TextEditingController _insuranceController = TextEditingController();
   final TextEditingController _nationalIdController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -63,6 +65,72 @@ class _RegPatientPageState extends State<RegPatientPage> {
       _accessToken = token;
     });
     return token;
+  }
+  
+  String generateRandomString(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random();
+    return List.generate(length, (index) => chars[random.nextInt(chars.length)]).join();
+  }
+  Future<void> register() async {
+    try {
+      final username = generateRandomString(21);
+      final formData = {
+        'email': _emailController.text,
+        'user_name': username,
+        'name': _nameController.text,
+        'dob': _dobUnixTimestamp.toString(),
+        'pob': _pobController.text,
+        'national_id': _nationalIdController.text,
+        'phone_num': _phoneController.text,
+        'address': _addressController.text,
+        'relative_phone': _relativePhoneController.text,
+        'sex': _isMale ? 'true' : 'false',
+        'password': _passwordController.text,
+      };
+
+      final response = await http.post(
+        Uri.parse(ApiEndpoints.regPatient),
+        headers: {
+          'Authorization': 'Bearer $_accessToken',
+          'ngrok-skip-browser-warning': "69420",
+        },
+        body: formData,
+      );
+
+      if (response.statusCode == 200) {
+        // Registration successful, handle response
+        print('Registration successful: ${response.body}');
+        _showSuccessDialog();
+        Navigator.pushNamed(context, RoutesName.PATIENT_LIST);
+      } else {
+        // Registration failed
+        print('Registration failed with status: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Handle error
+      print('Error registering user: $error');
+    }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Registration Successful'),
+          content: Text('You have been successfully registered.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -180,13 +248,13 @@ class _RegPatientPageState extends State<RegPatientPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 20,),
                       Row(
                         children: [
                           Expanded(
                             child: _buildTextField(
-                              controller: _insuranceController,
-                              labelText: 'Jenis Asuransi',
+                              controller: _emailController,
+                              labelText: 'Alamat Email',
                             ),
                           ),
                         ],
@@ -217,7 +285,7 @@ class _RegPatientPageState extends State<RegPatientPage> {
                                 'password': _passwordController.text,
                               };
                               print('Form Data: $formData');
-                              // Handle form submission here
+                              register();
                             }
                           },
                           child: Text('Submit'),
