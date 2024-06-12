@@ -27,10 +27,10 @@ class _PatientListPageState extends State<PatientListPage> {
   int? _userType;
   late Map<String, dynamic> _userData;
   bool _loadFinished = false;
-  bool _devMode = true;
+  bool _devMode = false;
   bool _isSelectedPatient = false;
   Map<String, dynamic> _selectedPatient = {};
-  List<Map<String, dynamic>> _patients = [];
+  List<dynamic> _patients = [];
   TextEditingController _newBloodType = TextEditingController();
   TextEditingController _newDiastolic = TextEditingController();
   TextEditingController _newSystolic = TextEditingController();
@@ -59,24 +59,77 @@ class _PatientListPageState extends State<PatientListPage> {
   @override
   void initState() {
     super.initState();
-    if (_devMode) {
-      setState(() {
-        _patients = _sortPatientsByName(patientListData['patients']);
-      });
-    }
     _fetchAccessToken().then((token) => {
       if (token == null) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context).pushNamed(RoutesName.LOGIN);
         })
       } else {
-      }
+        setState(() {
+          _patients = patientListData['patients'];
+        }),
+        if (!_devMode) {
+          fetchData().then((result) => {
+            setState(() {
+              _patients = new List.from(_patients)..addAll(result);
+              cleanData(_patients);
+              print("ALL PATIENTS");
+              print(_patients);
+            })
+          })
+        }
+      },
     });
   }
+  void cleanData(List<dynamic> patientData) {
+  for (var patient in patientData) {
+    // Convert dob to Unix timestamp if it is a string
+    var dob = patient['dob'];
+    if (dob is String) {
+      try {
+        DateTime parsedDate = DateFormat('yyyy-MM-dd').parse(dob);
+        int unixTimestamp = parsedDate.millisecondsSinceEpoch ~/ 1000;
+        patient['dob'] = unixTimestamp;
+      } catch (e) {
+        print('Invalid date format for patient ID ${patient['patient_id']}: $dob');
+      }
+    }
 
-  List<Map<String, dynamic>> _sortPatientsByName(List<Map<String, dynamic>> patients) {
-    patients.sort((a, b) => a['name'].compareTo(b['name']));
-    return patients;
+    // Ensure medical_record exists with zero-length clinical_entry and medical_note if missing
+    if (patient['medical_record'].length == 0) {
+      patient['medical_record'].add({
+        'clinical_entry': [],
+        'medical_note': []
+      });
+    }
+  }
+}
+
+  Future<List<dynamic>> fetchData() async {
+    try {
+      print(_accessToken == null);
+      final response = await http.get(
+        Uri.parse(ApiEndpoints.patientList),
+        headers: {
+          'Authorization': 'Bearer $_accessToken',
+          'ngrok-skip-browser-warning': "69420",
+        },
+      );
+
+      // Handle response here
+      if (response.statusCode == 200) {
+        print('Response: ${response.body}');
+        return jsonDecode(response.body);
+      } else {
+        print('Request failed with status: ${response.statusCode}');
+        // Return an empty map or throw an exception based on your requirement
+        return []; // or throw Exception('Failed to fetch data');
+      }
+    } catch (error) {
+      print('Error fetching data 1: $error');
+      // Return an empty map or throw an exception based on your requirement
+      return []; // or throw Exception('Error fetching data: $error');
+    }
   }
 
   Future<String?> _fetchAccessToken() async{
@@ -87,7 +140,7 @@ class _PatientListPageState extends State<PatientListPage> {
       if (userDataS != null) {
         _userData = jsonDecode(userDataS);
         // Now userData is a Map<String, dynamic>
-        print(userDataS);
+        print("aaaaaaaaaaaa" + userDataS + token!);
       } else {
         // Handle the case where the user data is not found in storage
         print('No user data found in storage');
@@ -96,7 +149,8 @@ class _PatientListPageState extends State<PatientListPage> {
       return null;
     }
     setState(() {
-      _userType = _userData['userType'];
+      _userType = _userData['user_type'];
+      _accessToken = token;
     });
     return token;
   }
@@ -155,7 +209,7 @@ class _PatientListPageState extends State<PatientListPage> {
                           DataCell( // Custom cell for the action buttons
                             ElevatedButton(
                               onPressed: () {
-                                print(patient['patientID']);
+                                print(patient['patient_id']);
                                 setState(() {
                                   _selectedPatient = patient;
                                   _isSelectedPatient = true;
@@ -221,15 +275,14 @@ class _PatientListPageState extends State<PatientListPage> {
                           1: FlexColumnWidth(),
                         },
                         children: [
-                          _buildTableRow('No. Pasien:', _selectedPatient!['patientID']),
+                          _buildTableRow('No. Pasien:', _selectedPatient!['patient_id']),
                           _buildTableRow('Nama lengkap:', _selectedPatient!['name']),
                           _buildTableRow('Tanggal lahir:', DateTime.fromMillisecondsSinceEpoch(_selectedPatient!['dob'] * 1000).toLocal().toString().substring(0, 10)),
-                          _buildTableRow('Nomor Identitas (KTP/SIM):', _selectedPatient!['nationalID']),
-                          _buildTableRow('No. Handphone:', _selectedPatient!['phoneNum']),
-                          _buildTableRow('No. Handphone Kerabat:', _selectedPatient!['relativePhone']),
+                          _buildTableRow('Nomor Identitas (KTP/SIM):', _selectedPatient!['national_id']),
+                          _buildTableRow('No. Handphone:', _selectedPatient!['phone_num']),
+                          _buildTableRow('No. Handphone Kerabat:', _selectedPatient!['relative_phone']),
                           _buildTableRow('Alamat:', _selectedPatient!['address']),
                           _buildTableRow('Alias:', _selectedPatient!['alias']),
-                          _buildTableRow('Nama asuransi:', _selectedPatient!['insurance']['insurance_name']),
                           _buildTableRow('Jenis kelamin:', _selectedPatient!['sex'] ? 'Laki-laki' : 'Perempuan'),
                         ],
                       ),
@@ -249,42 +302,42 @@ class _PatientListPageState extends State<PatientListPage> {
                         ),
                       ),
                       SizedBox(height: 20,),
-                      Container(
-                        height: 300, // Adjust height as needed
-                        child: DefaultTabController(
-                          length: _selectedPatient['medicalRecord']['clinicalEntry'].length,
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 20),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        DefaultTabController(
-                                          length: _selectedPatient['medicalRecord']['clinicalEntry'].length,
-                                          child: Column(
-                                            children: [
-                                              TabBar(
-                                                indicatorColor: AppColors.element,
-                                                labelColor: AppColors.element,
-                                                isScrollable: true,
-                                                tabs: _selectedPatient['medicalRecord']['clinicalEntry'].map<Tab>((entry) {
-                                                  String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
-                                                      .toLocal()
-                                                      .toString()
-                                                      .substring(0, 10);
-                                                  return Tab(text: date);
-                                                }).toList(),
-                                              ),
-                                              Container(
-                                                height: 300, // Adjust height as needed
-                                                child: TabBarView(
-                                                  children: [
-                                                    ..._selectedPatient['medicalRecord']['clinicalEntry'].map<Widget>((entry) {
+                      _selectedPatient['medical_record'][0]['clinical_entry'] != null
+                      ? Container(
+                          height: 300, // Adjust height as needed
+                          child: DefaultTabController(
+                            length: _selectedPatient['medical_record'][0]['clinical_entry'].length,
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 20),
+                                  Expanded(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          DefaultTabController(
+                                            length: _selectedPatient['medical_record'][0]['clinical_entry'].length,
+                                            child: Column(
+                                              children: [
+                                                TabBar(
+                                                  indicatorColor: AppColors.element,
+                                                  labelColor: AppColors.element,
+                                                  isScrollable: true,
+                                                  tabs: _selectedPatient['medical_record'][0]['clinical_entry'].map<Tab>((entry) {
+                                                    String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
+                                                        .toLocal()
+                                                        .toString()
+                                                        .substring(0, 10);
+                                                    return Tab(text: date);
+                                                  }).toList(),
+                                                ),
+                                                Container(
+                                                  height: 300, // Adjust height as needed
+                                                  child: TabBarView(
+                                                    children: _selectedPatient['medical_record'][0]['clinical_entry'].map<Widget>((entry) {
                                                       return SingleChildScrollView(
                                                         child: GestureDetector(
                                                           onTap: () {
@@ -311,21 +364,21 @@ class _PatientListPageState extends State<PatientListPage> {
                                                         ),
                                                       );
                                                     }).toList(),
-                                                  ]
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        )
+                      : SizedBox(height: 0,),// Or any other widget you want to show when clinical_entry is null
                       SizedBox(height: 40,),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -423,79 +476,82 @@ class _PatientListPageState extends State<PatientListPage> {
                         ),
                       ),
                       SizedBox(height: 20,),
-                      Container(
-                        height: 300, // Adjust height as needed
-                        child: DefaultTabController(
-                          length: _selectedPatient['medicalRecord']['medicalNote'].length,
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 20),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        DefaultTabController(
-                                          length: _selectedPatient['medicalRecord']['medicalNote'].length,
-                                          child: Column(
-                                            children: [
-                                              TabBar(
-                                                indicatorColor: AppColors.element,
-                                                labelColor: AppColors.element,
-                                                isScrollable: true,
-                                                tabs: _selectedPatient['medicalRecord']['medicalNote'].map<Tab>((entry) {
-                                                  String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
-                                                      .toLocal()
-                                                      .toString()
-                                                      .substring(0, 10);
-                                                  return Tab(text: date);
-                                                }).toList(),
-                                              ),
-                                              Container(
-                                                height: 300, // Adjust height as needed
-                                                child: TabBarView(
-                                                  children: [
-                                                    ..._selectedPatient['medicalRecord']['medicalNote'].map<Widget>((entry) {
-                                                      return SingleChildScrollView(
-                                                        child: GestureDetector(
-                                                          onTap: () {
-                                                            // Open edit form for this clinical entry
-                                                          },
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              const SizedBox(height: 20),
-                                                              Table(
-                                                                children: [
-                                                                  _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
-                                                                  _buildTableRow('Note Content', '${entry['noteContent']}'),
-                                                                  _buildTableRow('Diagnosis', '${entry['diagnosis']}'),
-                                                                  _buildTableRow('Attachment', '${entry['attachment']}'),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      );
-                                                    }).toList(),
-                                                  ]
+                      _selectedPatient['medical_record'][0]['medical_note'] != null
+                      ? Container(
+                          height: 300, // Adjust height as needed
+                          child: DefaultTabController(
+                            length: _selectedPatient['medical_record'][0]['medical_note'].length,
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 20),
+                                  Expanded(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          DefaultTabController(
+                                            length: _selectedPatient['medical_record'][0]['medical_note'].length,
+                                            child: Column(
+                                              children: [
+                                                TabBar(
+                                                  indicatorColor: AppColors.element,
+                                                  labelColor: AppColors.element,
+                                                  isScrollable: true,
+                                                  tabs: _selectedPatient['medical_record'][0]['medical_note'].map<Tab>((entry) {
+                                                    String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
+                                                        .toLocal()
+                                                        .toString()
+                                                        .substring(0, 10);
+                                                    return Tab(text: date);
+                                                  }).toList(),
                                                 ),
-                                              ),
-                                            ],
+                                                Container(
+                                                  height: 300, // Adjust height as needed
+                                                  child: TabBarView(
+                                                    children: [
+                                                      ..._selectedPatient['medical_record'][0]['medical_note'].map<Widget>((entry) {
+                                                        return SingleChildScrollView(
+                                                          child: GestureDetector(
+                                                            onTap: () {
+                                                              // Open edit form for this clinical entry
+                                                            },
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                const SizedBox(height: 20),
+                                                                Table(
+                                                                  children: [
+                                                                    _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
+                                                                    _buildTableRow('Note Content', '${entry['noteContent']}'),
+                                                                    _buildTableRow('Diagnosis', '${entry['diagnosis']}'),
+                                                                    _buildTableRow('Attachment', '${entry['attachment']}'),
+                                                                  ],
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }).toList(),
+                                                    ]
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        )
+                      : SizedBox(), // Return an empty SizedBox if medical note is null
+
                       SizedBox(height: 40,),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -569,7 +625,7 @@ class _PatientListPageState extends State<PatientListPage> {
     );
   }
 
-  TableRow _buildTableRow(String label, String value) {
+  TableRow _buildTableRow(String label, String? value) {
     return TableRow(
       children: [
         Padding(
@@ -581,7 +637,7 @@ class _PatientListPageState extends State<PatientListPage> {
         ),
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: Text(value),
+          child: value != null ? Text(value):Text('None'),
         ),
       ],
     );
