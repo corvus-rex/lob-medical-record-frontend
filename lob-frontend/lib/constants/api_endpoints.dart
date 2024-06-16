@@ -7,4 +7,6 @@ class ApiEndpoints {
   static const me = '$BASE_URL/auth/me';
   static const regPatient = '$BASE_URL/patient/new';
   static const patientList = '$BASE_URL/patient/list';
+  static const newMedicalRecord = '$BASE_URL/emr/new';
+  static const submitClinicalEntry = '$BASE_URL/emr/new-clinical-entry';
 }

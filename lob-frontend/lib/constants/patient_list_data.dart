@@ -22,7 +22,7 @@ Map<String, dynamic> patientListData = {
         {
           "clinical_entry": [
             {
-              "date": DateTime(2024, 5, 15).millisecondsSinceEpoch ~/ 1000,
+              "entry_date": DateTime(2024, 5, 15).millisecondsSinceEpoch ~/ 1000,
               "height": 184,
               "weight": 81,
               "body_temp": 27,
@@ -44,7 +44,7 @@ Map<String, dynamic> patientListData = {
           ],
           "medical_note": [
             {
-              "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+              "entry_date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
               "note_content": "Lorem Ipsum dolor sit Amet",
               "attachment": "http://localhost:9000/file/id-101001000.pdf",
               "diagnosis": "Cancer Stage 4"
@@ -79,7 +79,7 @@ Map<String, dynamic> patientListData = {
         {
           "clinical_entry": [
             {
-              "date": DateTime(2024, 2, 20).millisecondsSinceEpoch ~/ 1000,
+              "entry_date": DateTime(2024, 2, 20).millisecondsSinceEpoch ~/ 1000,
               "height": 170,
               "weight": 65,
               "body_temp": 36.5,
@@ -91,7 +91,7 @@ Map<String, dynamic> patientListData = {
           ],
           "medical_note": [
             {
-              "date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
+              "entry_date": DateTime(2024, 1, 2).millisecondsSinceEpoch ~/ 1000,
               "note_content": "Lorem Ipsum dolor sit Amet",
               "attachment": "http://localhost:9000/file/id-101001000.pdf",
               "diagnosis": "Cancer Stage 4"
@@ -126,7 +126,7 @@ Map<String, dynamic> patientListData = {
         {
           "clinical_entry": [
             {
-              "date": 1807449600,
+              "entry_date": 1807449600,
               "height": 175,
               "weight": 75,
               "body_temp": 36.9,
@@ -138,7 +138,7 @@ Map<String, dynamic> patientListData = {
           ],
           "medical_note": [
             {
-              "date": 1807449600,
+              "entry_date": 1807449600,
               "note_content": "Lorem Ipsum dolor sit Amet",
               "attachment": "http://localhost:9000/file/id-101001000.pdf",
               "diagnosis": "Cancer Stage 4"
@@ -173,7 +173,7 @@ Map<String, dynamic> patientListData = {
         {
           "clinical_entry": [
             {
-              "date": 1867747200,
+              "entry_date": 1867747200,
               "height": 160,
               "weight": 55,
               "body_temp": 37.2,
@@ -185,7 +185,7 @@ Map<String, dynamic> patientListData = {
           ],
           "medical_note": [
             {
-              "date": 1867747200,
+              "entry_date": 1867747200,
               "note_content": "Lorem Ipsum dolor sit Amet",
               "attachment": "http://localhost:9000/file/id-101001000.pdf",
               "diagnosis": "Cancer Stage 4"

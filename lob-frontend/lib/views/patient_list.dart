@@ -37,6 +37,7 @@ class _PatientListPageState extends State<PatientListPage> {
   TextEditingController _newHeight = TextEditingController();
   TextEditingController _newWeight = TextEditingController();
   TextEditingController _newTemp = TextEditingController();
+  TextEditingController _newPulse = TextEditingController();
   TextEditingController _newNote = TextEditingController();
   bool _showNewEntryFields = false;
   bool _showNewNotesFields = false;
@@ -66,7 +67,6 @@ class _PatientListPageState extends State<PatientListPage> {
         })
       } else {
         setState(() {
-          _patients = patientListData['patients'];
         }),
         if (!_devMode) {
           fetchData().then((result) => {
@@ -138,7 +138,9 @@ class _PatientListPageState extends State<PatientListPage> {
       String? userDataS = await _storage.read(key: 'user');
       token = await _storage.read(key: 'token');
       if (userDataS != null) {
-        _userData = jsonDecode(userDataS);
+        setState(() {
+          _userData = jsonDecode(userDataS);
+        });
         // Now userData is a Map<String, dynamic>
         print("aaaaaaaaaaaa" + userDataS + token!);
       } else {
@@ -153,6 +155,96 @@ class _PatientListPageState extends State<PatientListPage> {
       _accessToken = token;
     });
     return token;
+  }
+
+  Future<String> _registerMedicalRecord() async {
+    
+      try {
+        final response = await http.post(
+          Uri.parse(ApiEndpoints.newMedicalRecord),
+          headers: {
+            'Authorization': 'Bearer $_accessToken',
+            'ngrok-skip-browser-warning': "69420",
+          },
+          body: {
+            'patient_id': _selectedPatient['patient_id'],
+            'created_date': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            'last_editted': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          },
+        );
+
+        if (response.statusCode == 200) {
+          print('MR Registration successful: ${response.body}');
+          final Map<String, dynamic> jsonResponse = json.decode(response.body);
+          setState(() {
+            _selectedPatient['medical_record'].add({
+              'record_id': jsonResponse['record_id'],
+              'clinical_entry': [],
+              'medical_note': []
+            });
+          });
+          return jsonResponse['record_id'];
+        } else {
+          // Registration failed
+          print('Registration failed with status: ${response.statusCode}');
+          return '';
+        }
+      } catch (error) {
+        // Handle error
+        print('Error registering new medical record: $error');
+        return '';
+      }
+  }
+
+  Future<void> _submitClinicalEntry() async {
+    String? recordID;
+    if (_selectedPatient['medical_record'].isEmpty) {
+      recordID = await _registerMedicalRecord();
+    } else {
+      recordID = _selectedPatient['medical_record'][0]['record_id'];
+    }
+    try {
+      final formData = {
+        'record_id': recordID,
+        'entry_date': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
+        'staff_id': _userData['medical_staff'][0]['staff_id'],
+        'height': _newHeight.text,
+        'weight': _newWeight.text,
+        'blood_type': _newBloodType.text,
+        'diastolic': _newDiastolic.text,
+        'systolic': _newSystolic.text,
+        'body_temp': _newTemp.text,
+        'pulse': _newPulse.text,
+        'note': _newNote.text,
+      };
+      print(formData);
+
+      final response = await http.post(
+        Uri.parse(ApiEndpoints.submitClinicalEntry),
+        headers: {
+          'Authorization': 'Bearer $_accessToken',
+          'ngrok-skip-browser-warning': "69420",
+        },
+        body: formData,
+      );
+      print(response);
+
+      if (response.statusCode == 200) {
+        // Registration successful, handle response
+        print('Registration successful: ${response.body}');
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        setState(() {
+          _selectedPatient['medical_record'][0]['clinical_entry'].add(jsonResponse);
+          _showNewEntryFields = false;
+        });
+      } else {
+        // Registration failed
+        print('Registration failed with status: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Handle error
+      print('Clinical entry submission failed: $error');
+    }
   }
   
   @override
@@ -327,10 +419,7 @@ class _PatientListPageState extends State<PatientListPage> {
                                                   labelColor: AppColors.element,
                                                   isScrollable: true,
                                                   tabs: _selectedPatient['medical_record'][0]['clinical_entry'].map<Tab>((entry) {
-                                                    String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
-                                                        .toLocal()
-                                                        .toString()
-                                                        .substring(0, 10);
+                                                    String date = entry['entry_date'];
                                                     return Tab(text: date);
                                                   }).toList(),
                                                 ),
@@ -349,11 +438,11 @@ class _PatientListPageState extends State<PatientListPage> {
                                                               const SizedBox(height: 20),
                                                               Table(
                                                                 children: [
-                                                                  _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
+                                                                  _buildTableRow('Date', entry['entry_date']),
                                                                   _buildTableRow('Height', '${entry['height']} cm'),
                                                                   _buildTableRow('Weight', '${entry['weight']} kg'),
-                                                                  _buildTableRow('Body Temperature', '${entry['bodyTemp']} °C'),
-                                                                  _buildTableRow('Blood Type', '${entry['bloodType']}'),
+                                                                  _buildTableRow('Body Temperature', '${entry['body_temp']} °C'),
+                                                                  _buildTableRow('Blood Type', '${entry['blood_type']}'),
                                                                   _buildTableRow('Systolic', '${entry['systolic']} mmHg'),
                                                                   _buildTableRow('Diastolic', '${entry['diastolic']} mmHg'),
                                                                   _buildTableRow('Note', '${entry['note']}'),
@@ -378,9 +467,9 @@ class _PatientListPageState extends State<PatientListPage> {
                             ),
                           ),
                         )
-                      : SizedBox(height: 0,),// Or any other widget you want to show when clinical_entry is null
+                      : SizedBox(height: 0,),
                       SizedBox(height: 40,),
-                      ElevatedButton(
+                      (_userType == 3 ) ? ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.only(top:20, bottom: 20, left: 0, right: 0),
                           shape: RoundedRectangleBorder(
@@ -401,9 +490,9 @@ class _PatientListPageState extends State<PatientListPage> {
                           fontSize: 16,
                           )
                         ),
-                      ),
+                      ) : const SizedBox(width:0),
                       SizedBox(height: 20,),
-                      _showNewEntryFields && (_userType == 2 || _userType == 3 )? 
+                      _showNewEntryFields? 
                       SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,6 +534,12 @@ class _PatientListPageState extends State<PatientListPage> {
                               ),
                             ),
                             TextField(
+                              controller: _newPulse, // Add text editing controller
+                              decoration: InputDecoration(
+                                labelText: 'Pulse',
+                              ),
+                            ),
+                            TextField(
                               controller: _newNote, // Add text editing controller
                               decoration: InputDecoration(
                                 labelText: 'Note',
@@ -452,7 +547,7 @@ class _PatientListPageState extends State<PatientListPage> {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                // Add new clinical entry
+                                _submitClinicalEntry();
                               },
                               child: Text('Save'),
                             ),
@@ -501,10 +596,7 @@ class _PatientListPageState extends State<PatientListPage> {
                                                   labelColor: AppColors.element,
                                                   isScrollable: true,
                                                   tabs: _selectedPatient['medical_record'][0]['medical_note'].map<Tab>((entry) {
-                                                    String date = DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000)
-                                                        .toLocal()
-                                                        .toString()
-                                                        .substring(0, 10);
+                                                    String date = entry['entry_date'];
                                                     return Tab(text: date);
                                                   }).toList(),
                                                 ),
@@ -524,7 +616,7 @@ class _PatientListPageState extends State<PatientListPage> {
                                                                 const SizedBox(height: 20),
                                                                 Table(
                                                                   children: [
-                                                                    _buildTableRow('Date', DateTime.fromMillisecondsSinceEpoch(entry['date'] * 1000).toLocal().toString().substring(0, 10)),
+                                                                    _buildTableRow('Date', entry['entry_date']),
                                                                     _buildTableRow('Note Content', '${entry['noteContent']}'),
                                                                     _buildTableRow('Diagnosis', '${entry['diagnosis']}'),
                                                                     _buildTableRow('Attachment', '${entry['attachment']}'),
