@@ -158,7 +158,12 @@ class _PatientListPageState extends State<PatientListPage> {
   }
 
   Future<String> _registerMedicalRecord() async {
-    
+      final formData = {
+            'patient_id': _selectedPatient['patient_id'],
+            'created_date': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
+            'last_editted': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
+          };
+          print(formData);
       try {
         final response = await http.post(
           Uri.parse(ApiEndpoints.newMedicalRecord),
@@ -166,27 +171,23 @@ class _PatientListPageState extends State<PatientListPage> {
             'Authorization': 'Bearer $_accessToken',
             'ngrok-skip-browser-warning': "69420",
           },
-          body: {
-            'patient_id': _selectedPatient['patient_id'],
-            'created_date': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-            'last_editted': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          },
+          body: formData,
         );
-
+        print(response);
         if (response.statusCode == 200) {
           print('MR Registration successful: ${response.body}');
           final Map<String, dynamic> jsonResponse = json.decode(response.body);
           setState(() {
-            _selectedPatient['medical_record'].add({
+            _selectedPatient['medical_record'][0] = {
               'record_id': jsonResponse['record_id'],
               'clinical_entry': [],
               'medical_note': []
-            });
+            };
           });
           return jsonResponse['record_id'];
         } else {
           // Registration failed
-          print('Registration failed with status: ${response.statusCode}');
+          print('MR registration failed with status: ${response.statusCode}');
           return '';
         }
       } catch (error) {
@@ -197,9 +198,12 @@ class _PatientListPageState extends State<PatientListPage> {
   }
 
   Future<void> _submitClinicalEntry() async {
-    String? recordID;
-    if (_selectedPatient['medical_record'].isEmpty) {
-      recordID = await _registerMedicalRecord();
+    String recordID = '';
+    print(_selectedPatient['medical_record']);
+    if (_selectedPatient['medical_record'][0]['clinical_entry'].isEmpty) {
+      print("AAAA");
+      await _registerMedicalRecord();
+      recordID = _selectedPatient['medical_record'][0]['record_id'];
     } else {
       recordID = _selectedPatient['medical_record'][0]['record_id'];
     }
